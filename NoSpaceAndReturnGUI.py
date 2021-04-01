@@ -1,5 +1,6 @@
 import tkinter as tk  # 引入Tkinter库中的函数，并重命名为tk
 import re
+import pangu
 
 
 def clearSpace(text):
@@ -10,20 +11,27 @@ def clearSpace(text):
     for i in order_replace_list:
         if i == u' ':
             continue
-        new_i = i.strip()
+        new_i = i.strip()    # 去除重复空格
+        new_i = ' '.join(new_i.split())
         text = text.replace(i, new_i)
     return text
 
 
 def clearReplace(text):
-    text = text.replace('\r\n', ' ')
-    fine_text = " ".join(text.split())
-    return fine_text
+    j = []
+    p = re.compile(r'\n\s*\n')
+    text_segment = p.split(text)
+    for i in text_segment:
+        j.append(i.replace('\n', ' '))
+
+    fine_text = '\n\n'.join(j)    # 多次换行保留为直接换两行
+    new_text = pangu.spacing_text(fine_text)
+    return new_text
 
 
 def format_text(long_str):
-    long_str = clearReplace(long_str)
     long_str = clearSpace(long_str)
+    long_str = clearReplace(long_str)
     window.clipboard_clear()
     window.clipboard_append(long_str)
 
@@ -48,11 +56,11 @@ def rebuildMac(mac_byte_list, mac_type):
     elif mac_type == 2 and invalid_flag == 0:
         for i in range(0, 9, 4):
             mac_address.append(str(mac_string[i:i + 4]))
-            result = '-'.join(mac_address)
+            result = '.'.join(mac_address)
     elif mac_type == 3 and invalid_flag == 0:
         for i in range(0, 9, 4):
             mac_address.append(str(mac_string[i:i + 4]))
-            result = '.'.join(mac_address)
+            result = '-'.join(mac_address)
     else:
         result = "Invalid MAC address"
 
@@ -64,10 +72,10 @@ def checkMac(raw_mac):
     raw_mac = raw_mac.strip()
     if raw_mac.find(':') != -1:
         mac_byte = raw_mac.split(':')
-    elif raw_mac.find('-') != -1:
-        mac_byte = raw_mac.split('-')
     elif raw_mac.find('.') != -1:
         mac_byte = raw_mac.split('.')
+    elif raw_mac.find('-') != -1:
+        mac_byte = raw_mac.split('-')
     else:
         mac_byte = 'Invalid MAC address'
         return mac_byte
