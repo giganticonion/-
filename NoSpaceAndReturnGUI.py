@@ -4,17 +4,38 @@ import pangu
 
 
 def clearSpace(text):
-    match_regex = re.compile(
-        u'[\u4e00-\u9fa5。，#@$%&*？！：；《》、（）]{1} +(?<![a-zA-Z0-9])|[a-zA-Z0-9{},.:;\-/"\'()?!\[\]]+')
-    should_replace_list = match_regex.findall(text)
-    order_replace_list = sorted(should_replace_list, key=lambda i: len(i), reverse=True)
-    for i in order_replace_list:
-        if i == u' ':
+    # 文本分行至列表
+    text_line_list = re.split(r'(\n)', text)
+
+    # 删除空元素
+    while '' in text_line_list:
+        text_line_list.remove('')
+
+    for l_index, text_line in enumerate(text_line_list):
+        # 如果是换行符跳过处理
+        if text_line == '\n':
             continue
-        new_i = i.strip()    # 去除重复空格
-        new_i = ' '.join(new_i.split())
-        text = text.replace(i, new_i)
-    return text
+        else:
+            # 匹配带空格的中文分割文本至列表
+            word_list = re.split(r'([\u4e00-\u9fa5。，#@$%&*？！：；《》、（）]{1} +)', text_line)
+            # 删除空元素
+            while '' in word_list:
+                word_list.remove('')
+
+            for index, words in enumerate(word_list):
+                # 逐项去除重复空格
+                new_words = words.strip()
+                # 处理英文句子中的重复空格
+                if len(new_words.split()) != 1:
+                    new_words = ' '.join(new_words.split())
+                # 更新结果
+                word_list[index] = new_words
+            nice_line = ''.join(word_list)
+            # 更新结果
+            text_line_list[l_index] = nice_line
+    # 重新组合所有行
+    nice_text = ''.join(text_line_list)
+    return nice_text
 
 
 def clearReplace(text):
@@ -22,9 +43,10 @@ def clearReplace(text):
     p = re.compile(r'\n\s*\n')
     text_segment = p.split(text)
     for i in text_segment:
-        j.append(i.replace('\n', ' '))
+        line_i = i.strip()
+        j.append(line_i.replace('\n', ' '))
 
-    fine_text = '\n\n'.join(j)    # 多次换行保留为直接换两行
+    fine_text = '\n\n'.join(j)  # 多次换行保留为直接换两行
     new_text = pangu.spacing_text(fine_text)
     return new_text
 
@@ -85,6 +107,11 @@ def checkMac(raw_mac):
 def buttonClick():
     clipboard_str = window.clipboard_get()
     text_box.delete('1.0', tk.END)  # 清除text组件内容
+    format_text(clipboard_str)
+    # 为避免英文换行时行尾和行头两个单词相连，替换时会增加一个空格（没有人工智能识别行尾单词是否完整，采用比较原始的处理）
+    # 这可能导致第一次处理后中文之间仍有空格存在，故处理两次
+    clipboard_str = window.clipboard_get()
+    text_box.delete('1.0', tk.END)
     format_text(clipboard_str)
     result_str = window.clipboard_get()
     text_box.insert(tk.INSERT, result_str)
