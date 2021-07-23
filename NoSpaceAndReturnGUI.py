@@ -2,6 +2,8 @@ import tkinter as tk  # 引入Tkinter库中的函数，并重命名为tk
 import re
 import pangu
 
+flag_keep_period_replace = 0
+
 
 def clearSpace(text):
     # 文本分行至列表
@@ -39,14 +41,30 @@ def clearSpace(text):
 
 
 def clearReplace(text):
-    j = []
-    p = re.compile(r'\n\s*\n')
-    text_segment = p.split(text)
+    paragraph = []
+    multi_replace_regexp = re.compile(r'\n\s*\n')
+    text_segment = multi_replace_regexp.split(text)
+
+    period_replace_regexp = re.compile(r'\n')
+
     for i in text_segment:
         line_i = i.strip()
-        j.append(line_i.replace('\n', ' '))
+        if flag_keep_period_replace == 1:
+            line_tmp = []
+            line_segment = period_replace_regexp.split(line_i)
+            for j in line_segment:
+                line_j = j.strip()
+                if re.match(r'.*[.:?!。：？！]$', line_j):
+                    line_tmp.append(line_j)
+                    line_tmp.append('\n')
+                else:
+                    line_tmp.append(line_j)
+                    line_tmp.append(' ')
+            paragraph.append(''.join(line_tmp))
+        else:
+            paragraph.append(line_i.replace('\n', ' '))
 
-    fine_text = '\n\n'.join(j)  # 多次换行保留为直接换两行
+    fine_text = '\n\n'.join(paragraph)  # 多次换行保留为直接换两行
     new_text = pangu.spacing_text(fine_text)
     return new_text
 
@@ -117,11 +135,19 @@ def buttonClick():
     text_box.insert(tk.INSERT, result_str)
 
 
-def checkBoxClick():
+def checkBoxOnTop():
     if is_on_top.get() == 1:
         window.wm_attributes('-topmost', 1)  # 锁定窗口置顶
     else:
         window.wm_attributes('-topmost', 0)  # 释放窗口置顶
+
+
+def checkBoxClick():
+    global flag_keep_period_replace
+    if is_keep_period.get() == 1:
+        flag_keep_period_replace = 1
+    else:
+        flag_keep_period_replace = 0
 
 
 def buttonClickColon():
@@ -157,7 +183,7 @@ window.geometry('480x200-50-0')
 window.minsize(width=480, height=200)
 
 button_no_space = tk.Button(window, text=" 去空格/换行 ", command=buttonClick)
-button_no_space.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
+button_no_space.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W + tk.N)
 button_no_space.rowconfigure(0, weight=1)
 
 button_mac_colon = tk.Button(window, text="MAC地址\n: 格式", command=buttonClickColon)
@@ -181,9 +207,14 @@ text_box.grid(row=1, column=0, columnspan=5, sticky=tk.E + tk.W + tk.N + tk.S)
 
 # 置顶窗口复选框
 is_on_top = tk.IntVar()
-check_box = tk.Checkbutton(window, text="置顶窗口", variable=is_on_top, command=checkBoxClick)
+check_box = tk.Checkbutton(window, text="置顶", variable=is_on_top, command=checkBoxOnTop)
 check_box.deselect()
 check_box.grid(row=0, column=4, sticky=tk.E)
+
+is_keep_period = tk.IntVar()
+check_box1 = tk.Checkbutton(window, text="保留行尾句号分段", variable=is_keep_period, command=checkBoxClick)
+check_box1.deselect()
+check_box1.grid(row=0, column=0, padx=10, sticky=tk.W+tk.S)
 
 window.rowconfigure(1, weight=1)
 window.columnconfigure(0, weight=1)
