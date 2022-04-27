@@ -12,13 +12,13 @@
 
 ## 运行环境
 
-Python环境：Python 3.9.0
-Qt Designer: 5.11.1
+- Python环境：Python 3.9.0
+- Qt Designer: 5.11.1
 
 ## 引用的库
 
-PyQt5: 5.15.4
-中英文混排补空格：[pangu.py](https://github.com/vinta/pangu.py) (Python)
+- PyQt5: 5.15.4
+- 中英文混排补空格：[pangu.py](https://github.com/vinta/pangu.py) (Python)
 
 ## 食用方法
 
